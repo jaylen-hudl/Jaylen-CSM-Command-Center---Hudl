@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🏀 Renewal Pipeline — Q1</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0a0a0a;--card:#111113;--card2:#161618;--border:#232325;--border2:#2e2e30;
+  --text:#f0ede8;--muted:#5a5a60;--subtle:#888890;
+  --green:#34d399;--red:#f87171;--amber:#fbbf24;--blue:#60a5fa;--purple:#a78bfa;--pink:#f472b6;--orange:#fb923c;
+}
+body{font-family:'DM Mono',monospace;background:var(--bg);min-height:100vh;color:var(--text);padding:24px 16px;}
+h1,h2,.display{font-family:'Syne',sans-serif;}
+.container{max-width:920px;margin:0 auto;}
+
+/* HEADER */
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;gap:16px;}
+.header-left h1{font-size:22px;font-weight:900;letter-spacing:-0.5px;color:var(--text);}
+.header-left p{font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:0.5px;}
+.sync-status{font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid var(--border2);background:var(--card);color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);}
+.sync-dot.ok{background:var(--green);}
+.sync-dot.err{background:var(--red);}
+.sync-dot.loading{background:var(--amber);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+
+/* STAT CARDS */
+.stats{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;flex:1;min-width:120px;}
+.stat-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;}
+.stat-label{font-size:10px;color:var(--muted);margin-top:2px;letter-spacing:0.5px;text-transform:uppercase;}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:1px;}
+
+/* MAP */
+.map-wrap{background:#0d0d0f;border:1px solid var(--border2);border-radius:12px;padding:18px;margin-bottom:20px;}
+.map-legend{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.map-legend-label{font-size:10px;color:var(--muted);font-weight:500;letter-spacing:1px;text-transform:uppercase;margin-right:4px;}
+.rep-btn{padding:5px 14px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.15s;border:1px solid;}
+.tile-grid{overflow-x:auto;padding-bottom:4px;}
+.tile-svg{display:block;}
+
+/* FILTERS */
+.filter-row{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center;}
+.search{flex:1;min-width:150px;background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:7px 12px;font-size:12px;color:var(--text);font-family:'DM Mono',monospace;outline:none;}
+.search::placeholder{color:var(--muted);}
+select{background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:7px 10px;font-size:11px;color:var(--text);font-family:'DM Mono',monospace;outline:none;cursor:pointer;}
+.chip-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
+.chip{padding:5px 14px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--card);color:var(--muted);font-family:'DM Mono',monospace;transition:all 0.15s;}
+.chip:hover{border-color:var(--border2);color:var(--subtle);}
+.result-count{font-size:11px;color:var(--muted);margin-bottom:12px;}
+
+/* ACCOUNT LIST */
+.acct-list{display:flex;flex-direction:column;gap:5px;}
+.acct{background:var(--card);border:1px solid var(--border);border-left:3px solid;border-radius:9px;padding:11px 14px;cursor:pointer;transition:background 0.12s;}
+.acct:hover{background:var(--card2);}
+.acct-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.acct-name{font-size:13px;font-weight:500;color:var(--text);flex:1;min-width:140px;}
+.acct-meta{font-size:10px;color:var(--muted);margin-top:2px;}
+.acct-arr{font-size:14px;font-weight:500;min-width:50px;text-align:right;}
+.badges{display:flex;gap:5px;align-items:center;flex-wrap:wrap;}
+.badge{font-size:10px;font-weight:500;padding:2px 9px;border-radius:5px;border:1px solid;white-space:nowrap;font-family:'DM Mono',monospace;}
+.score-badge{font-size:11px;font-weight:500;padding:3px 10px;border-radius:5px;border:1px solid;white-space:nowrap;}
+.action-btn{font-size:10px;font-weight:500;padding:3px 10px;border-radius:5px;border:1px solid var(--border2);background:var(--card2);color:var(--muted);cursor:pointer;font-family:'DM Mono',monospace;transition:all 0.12s;white-space:nowrap;}
+.action-btn:hover{border-color:var(--border);color:var(--subtle);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:#000000cc;z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal{background:#111113;border:1px solid var(--border2);border-radius:14px;padding:24px;width:480px;max-width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px #000c;}
+.modal-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;}
+.modal-name{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;}
+.modal-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+.modal-close{background:var(--card2);border:1px solid var(--border2);border-radius:6px;color:var(--muted);padding:5px 12px;font-size:12px;cursor:pointer;font-family:'DM Mono',monospace;}
+.score-block{border-radius:10px;padding:14px 16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+.score-num{font-family:'Syne',sans-serif;font-size:34px;font-weight:900;line-height:1;}
+.score-max{font-size:14px;font-weight:400;color:var(--muted);}
+.pips{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.pips-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+.pips-dots{display:flex;gap:3px;}
+.pip{width:9px;height:9px;border-radius:50%;}
+.pips-val{font-size:10px;font-weight:500;margin-top:2px;}
+.eng-block{background:#161618;border-radius:9px;padding:12px 14px;margin-bottom:12px;}
+.eng-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;}
+.eng-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.eng-row{background:#1a1a1e;border-radius:6px;padding:6px 10px;display:flex;justify-content:space-between;}
+.eng-key{font-size:11px;color:var(--muted);}
+.eng-val{font-size:11px;font-weight:500;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;}
+.info-row{background:#161618;border-radius:7px;padding:7px 11px;display:flex;justify-content:space-between;}
+.info-key{font-size:11px;color:var(--muted);}
+.info-val{font-size:11px;font-weight:500;}
+.notes-block{background:#1a1500;border:1px solid #3a2e00;border-radius:7px;padding:8px 12px;font-size:11px;color:#fbbf24;margin-bottom:12px;}
+.hidden{display:none;}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-left">
+      <h1>🏀 Renewal Pipeline — Q1</h1>
+      <p id="subtitle">Loading...</p>
+    </div>
+    <div class="sync-status" id="sync-status">
+      <div class="sync-dot loading" id="sync-dot"></div>
+      <span id="sync-text">Connecting...</span>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="map-wrap" id="map-wrap">
+    <div class="map-legend" id="map-legend"></div>
+    <div class="tile-grid"><svg class="tile-svg" id="tile-svg"></svg></div>
+  </div>
+
+  <div class="chip-row" id="chip-row"></div>
+  <div class="filter-row">
+    <input class="search" id="search" placeholder="Search accounts..." oninput="render()"/>
+    <select id="state-filter" onchange="render()"><option value="All">All States</option></select>
+    <select id="type-filter" onchange="render()">
+      <option value="all">All Types</option>
+      <option value="Renewal">Renewal</option>
+      <option value="New">New</option>
+    </select>
+    <select id="sort-by" onchange="render()">
+      <option value="composite">Sort: Priority</option>
+      <option value="arr">Sort: ARR</option>
+      <option value="days">Sort: Close Date</option>
+      <option value="name">Sort: Name</option>
+    </select>
+  </div>
+  <div class="result-count" id="result-count"></div>
+  <div class="acct-list" id="acct-list"></div>
+</div>
+
+<div class="modal-overlay hidden" id="modal" onclick="closeModal(event)">
+  <div class="modal" id="modal-inner"></div>
+</div>
+
+<script>
+const GIST_ID = "09fc2d55aa2b32593f49a699a8619b37";
+const GIST_FILE = "dashboard-data.json";
+
+function getToken(){
+  let t=localStorage.getItem("gh_gist_token");
+  if(!t){
+    t=prompt("Enter your GitHub token to enable sync:\n(This is stored only in your browser, never in the code)");
+    if(t) localStorage.setItem("gh_gist_token",t.trim());
+  }
+  return t;
+}
+const GH_TOKEN=getToken();
+
+const REP_MAP = {
+  AB:"Open",NM:"Open",OK:"Open",AR:"Open",LA:"Open",MS:"Open",AL:"Open",
+  SC:"Open",NH:"Open",VT:"Open",ME:"Open",NB:"Open",NS:"Open",PE:"Open",
+  HI:"Open",OR:"Open",ID:"Open",MT:"Open",WY:"Open",UT:"Open",NV:"Open",
+  KS:"Open",MO:"Open",QC:"Open","Newfoundland and Labrador":"Open",
+  BC:"Easton",WA:"Easton",CO:"Easton",TX:"Easton",MA:"Easton",CT:"Easton",
+  MD:"Easton",NJ:"Easton",NY:"Easton",DC:"Easton",DE:"Easton",
+  CA:"Noah",WI:"Noah",MI:"Noah",IL:"Noah",IN:"Noah",OH:"Noah",PA:"Noah",
+  AK:"Josh",YT:"Josh",NT:"Josh",NU:"Josh",SK:"Josh",MB:"Josh",
+  ND:"Josh",SD:"Josh",NE:"Josh",IA:"Josh",MN:"Josh",KY:"Josh",WV:"Josh",
+  Ontario:"Ian",AZ:"Ian",TN:"Ian",NC:"Ian",GA:"Ian",FL:"Ian",VA:"Ian",
+};
+const REP_COLORS = {Open:"#a78bfa",Easton:"#34d399",Noah:"#fb923c",Josh:"#60a5fa",Ian:"#f472b6"};
+const getRep = s => REP_MAP[s] || "—";
+const TODAY = new Date("2026-03-10");
+const daysSince = d => d ? Math.ceil((TODAY - new Date(d)) / 86400000) : null;
+const daysUntil = d => d ? Math.ceil((new Date(d) - TODAY) / 86400000) : 999;
+const fmtArr = n => n >= 1000 ? `$${(n/1000).toFixed(1)}k` : n > 0 ? `$${n}` : "—";
+
+const TILE_S=30,TILE_G=3;
+const TILES=[
+  {id:"YT",l:"YT",c:0,r:0},{id:"NT",l:"NT",c:1,r:0},{id:"NU",l:"NU",c:2,r:0},{id:"Newfoundland and Labrador",l:"NL",c:10,r:0},
+  {id:"BC",l:"BC",c:0,r:1},{id:"AB",l:"AB",c:1,r:1},{id:"SK",l:"SK",c:2,r:1},{id:"MB",l:"MB",c:3,r:1},{id:"Ontario",l:"ON",c:4,r:1},{id:"QC",l:"QC",c:5,r:1},{id:"NB",l:"NB",c:6,r:1},{id:"NS",l:"NS",c:7,r:1},{id:"PE",l:"PE",c:8,r:1},
+  {id:"AK",l:"AK",c:0,r:2},{id:"WA",l:"WA",c:1,r:2},{id:"MT",l:"MT",c:2,r:2},{id:"ND",l:"ND",c:3,r:2},{id:"MN",l:"MN",c:4,r:2},{id:"WI",l:"WI",c:5,r:2},{id:"MI",l:"MI",c:6,r:2},{id:"NY",l:"NY",c:8,r:2},{id:"VT",l:"VT",c:9,r:2},{id:"NH",l:"NH",c:10,r:2},{id:"ME",l:"ME",c:11,r:2},
+  {id:"OR",l:"OR",c:1,r:3},{id:"ID",l:"ID",c:2,r:3},{id:"WY",l:"WY",c:3,r:3},{id:"SD",l:"SD",c:4,r:3},{id:"IA",l:"IA",c:5,r:3},{id:"IL",l:"IL",c:6,r:3},{id:"IN",l:"IN",c:7,r:3},{id:"OH",l:"OH",c:8,r:3},{id:"PA",l:"PA",c:9,r:3},{id:"NJ",l:"NJ",c:10,r:3},{id:"MA",l:"MA",c:11,r:3},
+  {id:"CA",l:"CA",c:1,r:4},{id:"NV",l:"NV",c:2,r:4},{id:"CO",l:"CO",c:3,r:4},{id:"NE",l:"NE",c:4,r:4},{id:"MO",l:"MO",c:5,r:4},{id:"KY",l:"KY",c:6,r:4},{id:"WV",l:"WV",c:7,r:4},{id:"VA",l:"VA",c:8,r:4},{id:"MD",l:"MD",c:9,r:4},{id:"DE",l:"DE",c:10,r:4},{id:"CT",l:"CT",c:11,r:4},
+  {id:"AZ",l:"AZ",c:2,r:5},{id:"NM",l:"NM",c:3,r:5},{id:"KS",l:"KS",c:4,r:5},{id:"AR",l:"AR",c:5,r:5},{id:"TN",l:"TN",c:6,r:5},{id:"NC",l:"NC",c:7,r:5},{id:"SC",l:"SC",c:8,r:5},{id:"DC",l:"DC",c:9,r:5},
+  {id:"OK",l:"OK",c:3,r:6},{id:"LA",l:"LA",c:4,r:6},{id:"MS",l:"MS",c:5,r:6},{id:"AL",l:"AL",c:6,r:6},{id:"GA",l:"GA",c:7,r:6},
+  {id:"TX",l:"TX",c:3,r:7},{id:"FL",l:"FL",c:7,r:7},
+  {id:"HI",l:"HI",c:1,r:8},
+];
+
+const ENG={
+  126755:{users:78,views:4231,total:4479,assist:169,focus:0,hasAssist:true,hasFocus:false},
+  130716:{users:85,views:1574,total:1648,assist:154,focus:0,hasAssist:true,hasFocus:false},
+  174447:{users:46,views:1378,total:1458,assist:126,focus:0,hasAssist:true,hasFocus:false},
+  160074:{users:null,views:null,total:2079,assist:87,focus:0,hasAssist:true,hasFocus:false},
+  167049:{users:null,views:null,total:null,assist:87,focus:0,hasAssist:true,hasFocus:false},
+  174511:{users:39,views:1713,total:1778,assist:76,focus:0,hasAssist:true,hasFocus:false},
+  174839:{users:null,views:null,total:null,assist:62,focus:0,hasAssist:true,hasFocus:false},
+  174249:{users:null,views:null,total:null,assist:61,focus:0,hasAssist:true,hasFocus:false},
+  76468:{users:null,views:null,total:null,assist:57,focus:0,hasAssist:true,hasFocus:false},
+  186057:{users:33,views:1114,total:1185,assist:14,focus:0,hasAssist:true,hasFocus:false},
+  186051:{users:null,views:null,total:2703,assist:27,focus:0,hasAssist:true,hasFocus:false},
+  186176:{users:null,views:null,total:796,assist:21,focus:0,hasAssist:true,hasFocus:false},
+  152559:{users:null,views:null,total:1235,assist:20,focus:0,hasAssist:true,hasFocus:false},
+  61360:{users:null,views:null,total:1748,assist:13,focus:0,hasAssist:true,hasFocus:false},
+  160080:{users:null,views:null,total:1771,assist:13,focus:0,hasAssist:true,hasFocus:false},
+  186110:{users:null,views:null,total:641,assist:13,focus:0,hasAssist:true,hasFocus:false},
+  183931:{users:null,views:null,total:947,assist:13,focus:0,hasAssist:true,hasFocus:false},
+  186175:{users:null,views:null,total:2197,assist:13,focus:0,hasAssist:true,hasFocus:false},
+  119159:{users:51,views:1201,total:1211,assist:0,focus:0,hasAssist:false,hasFocus:false},
+  61513:{users:33,views:1073,total:1075,assist:0,focus:0,hasAssist:false,hasFocus:false},
+  154298:{users:3,views:2875,total:2974,assist:0,focus:0,hasAssist:false,hasFocus:false},
+  160046:{users:43,views:2278,total:2288,assist:0,focus:0,hasAssist:false,hasFocus:false},
+  160571:{users:null,views:null,total:3060,assist:0,focus:0,hasAssist:false,hasFocus:false},
+  98364:{users:null,views:null,total:1997,assist:0,focus:0,hasAssist:false,hasFocus:false},
+  185880:{users:null,views:null,total:52,assist:0,focus:29,hasAssist:false,hasFocus:true},
+  191898:{users:null,views:null,total:null,assist:0,focus:2,hasAssist:false,hasFocus:true},
+  188140:{users:0,views:0,total:0,assist:0,focus:0,hasAssist:false,hasFocus:false},
+  174881:{users:0,views:0,total:0,assist:0,focus:0,hasAssist:false,hasFocus:false},
+  186637:{users:0,views:0,total:0,assist:0,focus:0,hasAssist:false,hasFocus:false},
+  186571:{users:0,views:0,total:0,assist:0,focus:0,hasAssist:false,hasFocus:false},
+  119403:{users:0,views:0,total:0,assist:0,focus:0,hasAssist:false,hasFocus:false},
+};
+
+const RAW=[
+  ["The GEM Hoops","FL","Scott Wineman","Contracted",10000,"","2026-06-27",11,"No info on tiers, but explicitly says 11 teams.","Renewal",192538],
+  ["Maryland Hoopmasters","MD","DaeRon Jones","Initial Interest",9100,"2025-11-24","2026-06-06",3,"Only lists 3 teams on website, more likely with AAU tryouts.","Renewal",130716],
+  ["Tennessee Impact","TN","Scott Wineman","Initial Interest",7200,"2025-06-26","2026-05-30",9,"9 teams on website, social media suggests more.","Renewal",174249],
+  ["Sports City Angels","OH","Dane Sackett","Initial Interest",6600,"2026-02-02","2026-05-01",7,"No website. Based on Admin, EYBL, and social ~7–8 teams.","Renewal",180536],
+  ["Mid Pro South","IL","Dane Sackett","Initial Interest",5200,"2026-02-25","2026-04-10",5,"","Renewal",174447],
+  ["West Michigan Hornets","MI","Dane Sackett","Contracted",5000,"","2026-04-01",6,"","Renewal",126755],
+  ["Simcoe United","Ontario","Clark Brinkman","Initial Interest",5200,"2026-01-26","2026-04-30",4,"Looking to set team up on contract prorated with current season.","New",174511],
+  ["New Jersey Rise","NJ","DaeRon Jones","Initial Interest",4000,"2026-02-17","2026-04-18",4,"Want to move to 3–4 teams. All decisions through Ellen.","Renewal",160080],
+  ["Hinsdale Inferno","IL","Dane Sackett","Initial Interest",4000,"2026-02-10","2026-05-11",3,"","Renewal",191898],
+  ["TN Marathon","TN","Scott Wineman","Initial Interest",3300,"2026-02-25","2026-04-11",1,"","Renewal",185880],
+  ["WV Thunder - Riego","IN","Dane Sackett","Initial Interest",2700,"2026-02-02","2026-05-01",3,"Branch of a larger org. Only a few teams for this branch.","Renewal",186110],
+  ["North Dakota Phenom","ND","Stephen Holdren","Initial Interest",2500,"2026-02-20","2026-05-20",1,"","Renewal",61360],
+  ["United New Jersey","NJ","DaeRon Jones","Initial Interest",2100,"2026-02-23","2026-04-21",3,"","Renewal",186057],
+  ["United New Jersey (B)","NJ","DaeRon Jones","Initial Interest",2100,"2026-02-09","2026-05-08",3,"","Renewal",186057],
+  ["Team 1848","WI","Dane Sackett","Initial Interest",2400,"2026-02-02","2026-05-01",6,"","Renewal",160571],
+  ["SLAAM Basketball","PA","Dane Sackett","Initial Interest",2400,"2026-02-18","2026-04-04",6,"7 teams on bronze. Jamal Woodson is main contact.","Renewal",119159],
+  ["SLAAM Basketball (B)","PA","Dane Sackett","Initial Interest",2400,"2026-02-02","2026-05-01",6,"7 teams on bronze.","Renewal",119159],
+  ["BC Denver","CO","Nathan Holmberg","Initial Interest",2000,"2026-02-25","2026-04-06",5,"","Renewal",160387],
+  ["CMF Basketball","MA","DaeRon Jones","Initial Interest",2000,"2026-02-24","2026-04-10",2,"Frank is POC. Good candidate for prime club package.","Renewal",160074],
+  ["New York Grit","NY","DaeRon Jones","Initial Interest",2000,"2025-04-22","2026-04-11",2,"","Renewal",186007],
+  ["Rize Sports Basketball","PA","Dane Sackett","Initial Interest",2000,"2026-02-20","2026-05-12",2,"Looks more like a facility with leagues.","Renewal",186175],
+  ["High Rise Elite","CT","DaeRon Jones","Initial Interest",1900,"2026-02-24","2026-04-10",1,"","Renewal",183931],
+  ["Next Level","KY","Scott Wineman","Initial Interest",1900,"2026-02-16","2026-04-17",1,"","Renewal",154388],
+  ["FBC Reign","TN","Scott Wineman","Initial Interest",1900,"2026-02-20","2026-04-21",1,"","Renewal",174279],
+  ["WV Thunder","WV","Scott Wineman","Initial Interest",1900,"2026-02-23","2026-04-23",2,"","Renewal",76468],
+  ["WV Thunder (New)","WV","Scott Wineman","Initial Interest",1900,"2026-01-23","2026-04-23",2,"","New",76468],
+  ["North Georgia Magic","GA","Scott Wineman","Initial Interest",1900,"2026-01-30","2026-04-30",1,"Changed org name to Redline Basketball Club.","Renewal",152559],
+  ["WTNO","OH","Dane Sackett","Initial Interest",1900,"2026-02-02","2026-05-01",1,"","Renewal",185957],
+  ["Arsenal Hoops","MO","Stephen Holdren","Initial Interest",1900,"2026-02-19","2026-05-02",1,"","Renewal",181124],
+  ["Purpose Driven Training Academy","MT","Nathan Holmberg","Initial Interest",1900,"2026-02-26","2026-05-15",2,"","Renewal",177541],
+  ["VA Hurricanes","VA","DaeRon Jones","Initial Interest",1900,"2026-02-17","2026-05-18",2,"","Renewal",171786],
+  ["Chapman Basketball Academy South","WI","Dane Sackett","Initial Interest",1900,"2026-01-12","2026-05-30",1,"","Renewal",167049],
+  ["TEXAN ELITE BASKETBALL","TX","Stephen Holdren","Initial Interest",1900,"2026-02-19","2026-06-05",1,"","Renewal",174839],
+  ["Team Arizona","AZ","Nathan Holmberg","Initial Interest",1600,"2026-02-18","2026-04-04",1,"","Renewal",97448],
+  ["Rocky Mountain Fever","CO","Nathan Holmberg","Initial Interest",1600,"2026-02-19","2026-04-05",4,"","Renewal",180864],
+  ["Della Lamb","MO","Stephen Holdren","Initial Interest",1600,"2026-02-23","2026-04-09",1,"Website doesn't work. Facebook not updated since 2022.","Renewal",185994],
+  ["WeR1 Basketball","DE","DaeRon Jones","Initial Interest",1300,"2026-02-23","2026-04-09",1,"","Renewal",185982],
+  ["SLAAM 2027 Osborn","PA","Dane Sackett","Initial Interest",1300,"2026-02-25","2026-04-11",1,"","Renewal",174446],
+  ["SW Minnesota Stars","SD","Stephen Holdren","Initial Interest",1200,"2026-02-25","2026-04-11",3,"","Renewal",98364],
+  ["NoCo Elite Basketball","CO","Nathan Holmberg","Initial Interest",1300,"2026-02-17","2026-04-18",1,"","Renewal",174502],
+  ["Tulsa Basketball Academy","OK","Stephen Holdren","Initial Interest",1300,"2026-02-23","2026-04-22",1,"","Renewal",181030],
+  ["Odenton Elite","MD","DaeRon Jones","Initial Interest",1300,"2026-01-30","2026-04-29",1,"","Renewal",186176],
+  ["The Team","TN","Scott Wineman","Initial Interest",1300,"2026-02-04","2026-04-30",1,"Doesn't look like an actual club. No website.","Renewal",185926],
+  ["Irvington Youth Basketball","NY","DaeRon Jones","Initial Interest",1300,"2026-02-02","2026-05-01",1,"","Renewal",165920],
+  ["Chapman Basketball Academy","WI","Dane Sackett","Initial Interest",1300,"2026-02-09","2026-05-01",1,"","Renewal",185989],
+  ["PSA Warriors","TX","Stephen Holdren","Initial Interest",1300,"2026-02-18","2026-05-12",1,"","Renewal",186051],
+  ["Thunder Basketball","FL","Scott Wineman","Initial Interest",1300,"2026-02-20","2026-05-21",1,"","Renewal",186162],
+  ["HER Elite","GA","Scott Wineman","Initial Interest",1300,"2026-02-26","2026-04-08",1,"","Renewal",142943],
+  ["Dayton Lady Hoopstars","OH","Dane Sackett","Initial Interest",1300,"2026-02-17","2026-04-18",1,"Hung up on price. Wants club-wide packages only.","Renewal",79063],
+  ["3D Elite Hoops","GA","Scott Wineman","Initial Interest",1300,"2026-02-23","2026-04-23",1,"","Renewal",181017],
+  ["3D Elite Hoops (B)","GA","Scott Wineman","Initial Interest",1300,"2026-02-16","2026-04-02",1,"","Renewal",181017],
+  ["Dayton Lady Hoopstars (B)","OH","Dane Sackett","Initial Interest",1300,"","2026-06-11",1,"Hung up on price.","Renewal",79063],
+  ["Pro Skills Basketball - DMV","DC","DaeRon Jones","Initial Interest",1200,"2026-02-16","2026-04-02",2,"Boys and girls grades 1–12.","Renewal",160046],
+  ["New Jersey Shoreshots","NJ","DaeRon Jones","Initial Interest",1200,"2026-02-16","2026-04-02",3,"Each team reached out individually. Hard to reach director.","Renewal",61513],
+  ["New Jersey Shoreshots (B)","NJ","DaeRon Jones","Initial Interest",1200,"","2026-05-25",3,"","Renewal",61513],
+  ["Swarm Basketball LLC - Iowa","IA","Stephen Holdren","Initial Interest",1200,"2026-02-23","2026-04-22",3,"","Renewal",174529],
+  ["Team Herro Girls","WI","Dane Sackett","Initial Interest",1200,"2026-02-02","2026-05-01",3,"","Renewal",185956],
+  ["SSA Basketball","KS","Stephen Holdren","Initial Interest",1200,"2026-02-18","2026-05-02",3,"","Renewal",181125],
+  ["Central Jersey Hawks","NJ","DaeRon Jones","Initial Interest",1000,"2026-02-25","2026-04-11",1,"","Renewal",169786],
+  ["Central Jersey Hawks (B)","NJ","DaeRon Jones","Initial Interest",1000,"2026-02-23","2026-04-14",1,"","Renewal",185836],
+  ["Central Jersey Hawks (Mayo)","NJ","DaeRon Jones","Initial Interest",400,"2026-02-23","2026-04-22",1,"","Renewal",181042],
+  ["Vibez AAU","NY","DaeRon Jones","Initial Interest",1000,"2026-02-06","2026-05-07",1,"","Renewal",181307],
+  ["Asphalt Green Basketball","NY","DaeRon Jones","Contracted",1000,"","2026-05-30",1,"","Renewal",186304],
+  ["Asphalt Green Basketball (Renewal)","NY","DaeRon Jones","Initial Interest",1000,"","2026-06-30",1,"","Renewal",186304],
+  ["Sims Basketball Academy","MA","DaeRon Jones","Initial Interest",1000,"2025-05-13","2026-06-04",1,"","Renewal",160969],
+  ["Tom Gutkes","NY","DaeRon Jones","Initial Interest",999,"2025-10-21","2026-04-04",2,"Associated with Long Island Knights. Not an actual club.","Renewal",185946],
+  ["Michigan Storm Elite","MI","Dane Sackett","Initial Interest",900,"2026-02-02","2026-05-01",1,"","Renewal",186079],
+  ["Troop West","CA","Nick Lenners","Initial Interest",800,"2026-01-30","2026-04-30",2,"","Renewal",154298],
+  ["Playground Elite","WI","Dane Sackett","Initial Interest",800,"2026-02-26","2026-05-01",1,"","Renewal",170830],
+  ["Texas Made Basketball","TX","Stephen Holdren","Initial Interest",800,"2026-02-18","2026-06-16",2,"","Renewal",124072],
+  ["Tyler Area Basketball Officials","TX","Stephen Holdren","Initial Interest",750,"2026-02-19","2026-05-26",1,"Officials Review Group.","Renewal",186480],
+  ["Team Thrill","DC","DaeRon Jones","Initial Interest",400,"2026-02-17","2026-04-03",1,"Website says it will be updated in April.","Renewal",185960],
+  ["Brandon Bailey","AL","Scott Wineman","Initial Interest",400,"2026-02-26","2026-04-04",1,"","Renewal",133598],
+  ["Western PA Bruins","PA","Dane Sackett","Initial Interest",400,"2026-02-23","2026-04-09",1,"","Renewal",174501],
+  ["NOVA Cavaliers","VA","DaeRon Jones","Initial Interest",400,"2026-02-24","2026-04-10",1,"","Renewal",119403],
+  ["Phee Elite","MO","Stephen Holdren","Initial Interest",400,"2026-02-24","2026-04-10",1,"","Renewal",185995],
+  ["Southwest Select","TX","Stephen Holdren","Initial Interest",400,"2026-02-19","2026-04-15",1,"","Renewal",186033],
+  ["Keystone Karma","PA","Dane Sackett","Initial Interest",400,"2026-02-19","2026-04-20",1,"","Renewal",160151],
+  ["Start Strong Finish Stronger","MN","Stephen Holdren","Initial Interest",400,"2026-02-20","2026-04-21",1,"","Renewal",152390],
+  ["Utica 315","NY","DaeRon Jones","Initial Interest",400,"2026-02-23","2026-04-22",1,"","Renewal",160180],
+  ["Macon Basketball Academy","MI","Dane Sackett","Initial Interest",400,"2026-02-23","2026-04-24",1,"","Renewal",181039],
+  ["Florida Gulfcoast Foundation","FL","Scott Wineman","Initial Interest",400,"2025-11-26","2026-04-28",1,"","Renewal",167651],
+  ["Heart Of Illinois","IL","Dane Sackett","Initial Interest",400,"","2026-04-28",1,"","Renewal",98441],
+  ["Chattanooga Elite","TN","Scott Wineman","Initial Interest",400,"2026-01-28","2026-04-28",1,"","Renewal",95914],
+  ["Nets 2027","MO","Stephen Holdren","Initial Interest",400,"2026-02-19","2026-05-01",1,"Single team account.","Renewal",174624],
+  ["C-Jack Express","MD","DaeRon Jones","Initial Interest",400,"2026-02-12","2026-05-13",1,"","Renewal",165434],
+  ["Factory of Champions","TX","Stephen Holdren","Initial Interest",400,"2026-02-19","2026-05-16",1,"","Renewal",119539],
+  ["HHP Elite","TX","Stephen Holdren","Initial Interest",400,"2026-02-18","2026-05-19",1,"","Renewal",174881],
+  ["NJ Soldiers-HGSL","NJ","DaeRon Jones","Initial Interest",400,"2026-02-26","2026-05-27",1,"","Renewal",167900],
+  ["Parallel 45","MI","Dane Sackett","Initial Interest",400,"2026-01-13","2026-05-31",1,"","Renewal",142609],
+  ["Full Package Athletics","IL","Dane Sackett","Initial Interest",400,"2026-01-13","2026-06-01",1,"","Renewal",185954],
+  ["MN Suns","MN","Stephen Holdren","Initial Interest",400,"2026-02-18","2026-06-12",1,"","Renewal",60618],
+  ["Williams Bros Basketball","LA","Stephen Holdren","Initial Interest",400,"2026-02-18","2026-06-21",1,"","Renewal",152125],
+  ["Woodson Athletics","OK","Stephen Holdren","Initial Interest",400,"2026-02-18","2026-06-28",1,"","Renewal",160509],
+  ["CAL SPARKS San Diego","CA","Nick Lenners","Initial Interest",400,"2025-08-01","2026-06-30",1,"","Renewal",60672],
+  ["Bedford Eagles Min. Basketball","NS","Krista Weber","Initial Interest",398,"2026-02-16","2026-06-01",0,"","Renewal",186571],
+  ["Oakes Boys Basketball","ND","Stephen Holdren","Initial Interest",199,"2026-02-19","2026-06-10",0,"Individual FastDraw subscription.","Renewal",186637],
+  ["Fire","UT","Nathan Holmberg","Initial Interest",199,"2025-08-21","2026-06-18",0,"","Renewal",188140],
+  ["Hudson Valley Heat","NY","DaeRon Jones","Initial Interest",0,"2026-02-03","2026-04-30",0,"","New",null],
+  ["Roanoke Rockets","VA","DaeRon Jones","Initial Interest",0,"2026-02-06","2026-04-30",0,"","New",null],
+  ["Team NorCal AAU","CA","Nick Lenners","Initial Interest",0,"","2026-04-30",0,"","New",null],
+  ["The Lab","CA","Nick Lenners","Initial Interest",0,"2026-02-12","2026-04-30",0,"","New",null],
+  ["YMCA of the North Shore","MA","DaeRon Jones","Initial Interest",0,"2025-12-15","2026-05-31",0,"","New",null],
+  ["Santa Barbara HAVOC","CA","Nick Lenners","Initial Interest",0,"2026-02-04","2026-05-31",0,"","New",null],
+];
+
+// ---- Scoring ----
+function scoreARR(a){return a>=5000?5:a>=2000?4:a>=1000?3:a>=400?2:1;}
+function scoreUrgency(d){return d<=30?5:d<=60?4:d<=90?3:d<=120?2:1;}
+function scoreEngagement(e){
+  if(!e) return null;
+  const s=[];
+  if(e.total!=null){const t=e.total;s.push(t>=4000?5:t>=1500?4:t>=500?3:t>=100?2:1);}
+  if(e.users!=null){const u=e.users;s.push(u>=71?5:u>=41?4:u>=21?3:u>=6?2:1);}
+  if(e.views!=null){const v=e.views;s.push(v>=5000?5:v>=2000?4:v>=800?3:v>=200?2:1);}
+  if(e.hasAssist){const a=e.assist||0;s.push(a>=101?5:a>=51?4:a>=16?3:a>=1?2:1);}
+  if(e.hasFocus){const f=e.focus||0;s.push(f>=71?5:f>=31?4:f>=11?3:f>=1?2:1);}
+  return s.length?Math.max(1,Math.min(5,Math.round(s.reduce((a,b)=>a+b,0)/s.length))):null;
+}
+function getComposite(arr,dl,eS){
+  const aS=scoreARR(arr),uS=scoreUrgency(dl),hasE=eS!==null;
+  const score=aS+uS+(hasE?eS:0),max=hasE?15:10;
+  let tier,color;
+  if(hasE){if(score>=13){tier="Top";color="#f87171";}else if(score>=10){tier="High";color="#fb923c";}else if(score>=7){tier="Mid";color="#facc15";}else{tier="Low";color="#94a3b8";}}
+  else{if(score>=9){tier="Top";color="#f87171";}else if(score>=7){tier="High";color="#fb923c";}else if(score>=5){tier="Mid";color="#facc15";}else{tier="Low";color="#94a3b8";}}
+  return{score,max,tier,color,arrScore:aS,urgencyScore:uS,engScore:eS,hasEng:hasE};
+}
+
+const ORGS=RAW.map((r,i)=>{
+  const[name,state,owner,stage,arr,lastAct,closeDate,teams,notes,type,orgId]=r;
+  const actDays=daysSince(lastAct),daysLeft=daysUntil(closeDate);
+  const eng=orgId?ENG[orgId]||null:null,engScore=scoreEngagement(eng);
+  const composite=getComposite(arr,daysLeft,engScore);
+  const rep=getRep(state);
+  const zeroActivity=eng&&eng.total===0&&eng.users===0&&type!=="New";
+  const upsell=eng&&eng.total>1000&&arr<1500;
+  return{id:i,name,state,owner,stage,arr,actDays,daysLeft,teams,notes,type,orgId,closeDate,composite,eng,zeroActivity,upsell,rep};
+});
+
+// ---- Gist sync ----
+let gistData={intent:{},expansion:{}};
+let saveTimer=null;
+
+async function loadGist(){
+  setSyncStatus("loading","Syncing...");
+  try{
+    const r=await fetch(`https://api.github.com/gists/${GIST_ID}`,{
+      headers:{Authorization:`token ${GH_TOKEN}`,Accept:"application/vnd.github.v3+json"}
+    });
+    if(!r.ok) throw new Error(r.status);
+    const g=await r.json();
+    const file=g.files[GIST_FILE];
+    if(file&&file.content&&file.content.trim()!=="{}"){
+      const d=JSON.parse(file.content);
+      gistData=d;
+    }
+    setSyncStatus("ok","Synced");
+  }catch(e){
+    setSyncStatus("err","Offline — changes saved locally");
+    const local=localStorage.getItem("pipeline_data");
+    if(local) gistData=JSON.parse(local);
+  }
+  render();
+}
+
+async function saveGist(){
+  localStorage.setItem("pipeline_data",JSON.stringify(gistData));
+  setSyncStatus("loading","Saving...");
+  try{
+    const r=await fetch(`https://api.github.com/gists/${GIST_ID}`,{
+      method:"PATCH",
+      headers:{Authorization:`token ${GH_TOKEN}`,Accept:"application/vnd.github.v3+json","Content-Type":"application/json"},
+      body:JSON.stringify({files:{[GIST_FILE]:{content:JSON.stringify(gistData,null,2)}}})
+    });
+    if(!r.ok) throw new Error(r.status);
+    setSyncStatus("ok","Saved ✓");
+  }catch(e){
+    setSyncStatus("err","Save failed — stored locally");
+  }
+}
+
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(saveGist,800);
+}
+
+function setSyncStatus(state,text){
+  const dot=document.getElementById("sync-dot");
+  const span=document.getElementById("sync-text");
+  dot.className="sync-dot "+(state==="ok"?"ok":state==="err"?"err":"loading");
+  span.textContent=text;
+}
+
+function cycleIntent(id,e){
+  e.stopPropagation();
+  const order=[null,"Committed","Not Renewing","In Discussion"];
+  const cur=gistData.intent[id]??null;
+  const next=order[(order.indexOf(cur)+1)%order.length];
+  if(next===null) delete gistData.intent[id]; else gistData.intent[id]=next;
+  scheduleSave();
+  render();
+}
+function cycleExpansion(id,e){
+  e.stopPropagation();
+  const order=[null,"Expressed Interest","General Opportunity"];
+  const cur=gistData.expansion[id]??null;
+  const next=order[(order.indexOf(cur)+1)%order.length];
+  if(next===null) delete gistData.expansion[id]; else gistData.expansion[id]=next;
+  scheduleSave();
+  render();
+}
+
+const INTENT_STYLE={
+  "Committed":{color:"#4ade80",bg:"#4ade8015",border:"#4ade8040",icon:"✓"},
+  "Not Renewing":{color:"#f87171",bg:"#f8717115",border:"#f8717140",icon:"✗"},
+  "In Discussion":{color:"#facc15",bg:"#facc1515",border:"#facc1540",icon:"◎"},
+};
+const EXP_STYLE={
+  "Expressed Interest":{color:"#fb923c",bg:"#fb923c15",border:"#fb923c40",icon:"↑"},
+  "General Opportunity":{color:"#94a3b8",bg:"#94a3b815",border:"#94a3b840",icon:"~"},
+};
+
+// ---- UI state ----
+let stateFilter="All",repFilter="All",priorityFilter="all",typeFilter="all",sortBy="composite",search="";
+
+// ---- Map ----
+function buildMap(){
+  const stateCounts={},stateArr={};
+  ORGS.forEach(o=>{stateCounts[o.state]=(stateCounts[o.state]||0)+1;stateArr[o.state]=(stateArr[o.state]||0)+o.arr;});
+  const maxC=Math.max(...TILES.map(t=>t.c)),maxR=Math.max(...TILES.map(t=>t.r));
+  const W=(maxC+1)*(TILE_S+TILE_G),H=(maxR+1)*(TILE_S+TILE_G);
+  const svg=document.getElementById("tile-svg");
+  svg.setAttribute("width",W);svg.setAttribute("height",H);svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  svg.innerHTML="";
+  TILES.forEach(t=>{
+    const rep=getRep(t.id),col=REP_COLORS[rep]||"#444";
+    const cnt=stateCounts[t.id]||0;
+    const isSel=stateFilter===t.id;
+    const isRepSel=repFilter!=="All"&&rep===repFilter;
+    const dimmed=(repFilter!=="All"&&rep!==repFilter);
+    const x=t.c*(TILE_S+TILE_G),y=t.r*(TILE_S+TILE_G);
+    const bg=isSel?col:cnt>0?col+"44":col+"18";
+    const stroke=isSel?col:isRepSel?col+"cc":cnt>0?col+"55":col+"28";
+    const opacity=dimmed?"0.18":"1";
+    const g=document.createElementNS("http://www.w3.org/2000/svg","g");
+    g.style.opacity=opacity;g.style.cursor=cnt>0?"pointer":"default";
+    g.setAttribute("data-id",t.id);
+    if(cnt>0) g.addEventListener("click",()=>{stateFilter=stateFilter===t.id?"All":t.id;buildMap();render();});
+    const rect=document.createElementNS("http://www.w3.org/2000/svg","rect");
+    rect.setAttribute("x",x);rect.setAttribute("y",y);rect.setAttribute("width",TILE_S);rect.setAttribute("height",TILE_S);
+    rect.setAttribute("rx","5");rect.setAttribute("fill",bg);rect.setAttribute("stroke",stroke);rect.setAttribute("stroke-width","1.5");
+    const txt=document.createElementNS("http://www.w3.org/2000/svg","text");
+    txt.setAttribute("x",x+TILE_S/2);txt.setAttribute("y",y+TILE_S/2-(cnt>0?3:0));
+    txt.setAttribute("text-anchor","middle");txt.setAttribute("dominant-baseline","middle");
+    txt.setAttribute("font-size","8");txt.setAttribute("font-weight","700");txt.setAttribute("font-family","DM Mono,monospace");
+    txt.setAttribute("fill",isSel?"#fff":col);txt.textContent=t.l;
+    g.appendChild(rect);g.appendChild(txt);
+    if(cnt>0){
+      const cnt_txt=document.createElementNS("http://www.w3.org/2000/svg","text");
+      cnt_txt.setAttribute("x",x+TILE_S/2);cnt_txt.setAttribute("y",y+TILE_S/2+8);
+      cnt_txt.setAttribute("text-anchor","middle");cnt_txt.setAttribute("font-size","9");
+      cnt_txt.setAttribute("font-weight","900");cnt_txt.setAttribute("font-family","DM Mono,monospace");
+      cnt_txt.setAttribute("fill",isSel?"#fff":col);cnt_txt.textContent=cnt;
+      g.appendChild(cnt_txt);
+    }
+    svg.appendChild(g);
+  });
+
+  // Legend
+  const legend=document.getElementById("map-legend");
+  legend.innerHTML=`<span class="map-legend-label">Territory</span>`;
+  Object.entries(REP_COLORS).forEach(([rep,col])=>{
+    const btn=document.createElement("button");
+    btn.className="rep-btn";
+    const active=repFilter===rep;
+    btn.style.cssText=`border-color:${active?col:col+"44"};background:${active?col+"22":"transparent"};color:${active?col:col+"77"};`;
+    btn.textContent=rep;
+    btn.onclick=()=>{repFilter=repFilter===rep?"All":rep;buildMap();render();};
+    legend.appendChild(btn);
+  });
+  if(stateFilter!=="All"||repFilter!=="All"){
+    const clr=document.createElement("button");
+    clr.className="rep-btn";clr.textContent="Clear ×";
+    clr.style.cssText=`border-color:var(--border2);background:transparent;color:var(--muted);`;
+    clr.onclick=()=>{stateFilter="All";repFilter="All";buildMap();render();};
+    legend.appendChild(clr);
+  }
+}
+
+// ---- Chips ----
+function buildChips(){
+  const row=document.getElementById("chip-row");
+  const tiers=[{key:"all",label:"All"},{key:"Top",label:"Top",color:"#f87171"},{key:"High",label:"High",color:"#fb923c"},{key:"Mid",label:"Mid",color:"#facc15"},{key:"Low",label:"Low",color:"#94a3b8"}];
+  row.innerHTML="";
+  tiers.forEach(t=>{
+    const btn=document.createElement("button");
+    btn.className="chip";
+    const active=priorityFilter===t.key,col=t.color||"#94a3b8";
+    if(active){btn.style.borderColor=col;btn.style.background=col+"22";btn.style.color=col;}
+    btn.textContent=t.label;
+    btn.onclick=()=>{priorityFilter=t.key;buildChips();render();};
+    row.appendChild(btn);
+  });
+}
+
+// ---- Stats ----
+function buildStats(){
+  const totalArr=ORGS.reduce((s,o)=>s+o.arr,0);
+  const contractedArr=ORGS.filter(o=>o.stage==="Contracted").reduce((s,o)=>s+o.arr,0);
+  const committedArr=ORGS.filter(o=>gistData.intent[o.id]==="Committed").reduce((s,o)=>s+o.arr,0);
+  const notRenewingArr=ORGS.filter(o=>gistData.intent[o.id]==="Not Renewing").reduce((s,o)=>s+o.arr,0);
+  const expiring30Arr=ORGS.filter(o=>o.daysLeft<=30&&o.stage!=="Contracted").reduce((s,o)=>s+o.arr,0);
+  const zeroCount=ORGS.filter(o=>o.zeroActivity).length;
+  const cards=[
+    {label:"Total Pipeline",value:`${(totalArr/1000).toFixed(0)}k`,sub:"All accounts",color:"var(--text)"},
+    {label:"Contracted",value:`${(contractedArr/1000).toFixed(1)}k`,sub:"Already signed",color:"var(--blue)"},
+    {label:"Committed",value:committedArr>0?`${(committedArr/1000).toFixed(1)}k`:"—",sub:"Verbal confirm",color:"var(--green)"},
+    {label:"Not Renewing",value:notRenewingArr>0?`-${(notRenewingArr/1000).toFixed(1)}k`:"—",sub:"At risk",color:notRenewingArr>0?"var(--red)":"var(--muted)"},
+    {label:"Expiring ≤30d",value:`${(expiring30Arr/1000).toFixed(1)}k`,sub:"Act now",color:expiring30Arr>0?"var(--red)":"var(--green)"},
+    {label:"Zero Activity",value:zeroCount,sub:"Paying, not using",color:"var(--red)"},
+  ];
+  document.getElementById("stats").innerHTML=cards.map(c=>`
+    <div class="stat">
+      <div class="stat-val" style="color:${c.color}">${c.value}</div>
+      <div class="stat-label">${c.label}</div>
+      <div class="stat-sub">${c.sub}</div>
+    </div>`).join("");
+}
+
+// ---- Account list ----
+function render(){
+  buildStats();
+  const s=document.getElementById("search").value||search;
+  let list=[...ORGS];
+  if(stateFilter!=="All") list=list.filter(o=>o.state===stateFilter);
+  if(repFilter!=="All") list=list.filter(o=>o.rep===repFilter);
+  if(priorityFilter!=="all") list=list.filter(o=>o.composite.tier===priorityFilter);
+  const tf=document.getElementById("type-filter").value;
+  if(tf!=="all") list=list.filter(o=>o.type===tf);
+  if(s) list=list.filter(o=>o.name.toLowerCase().includes(s.toLowerCase())||o.owner.toLowerCase().includes(s.toLowerCase())||o.state.toLowerCase().includes(s.toLowerCase()));
+  const sb=document.getElementById("sort-by").value;
+  list.sort((a,b)=>{
+    if(sb==="composite") return b.composite.score-a.composite.score;
+    if(sb==="arr") return b.arr-a.arr;
+    if(sb==="days") return a.daysLeft-b.daysLeft;
+    if(sb==="name") return a.name.localeCompare(b.name);
+    return 0;
+  });
+  const filteredArr=list.reduce((s,o)=>s+o.arr,0);
+  document.getElementById("result-count").textContent=`${list.length} of ${ORGS.length} accounts · ${fmtArr(filteredArr)} ARR`;
+  const container=document.getElementById("acct-list");
+  container.innerHTML=list.length===0?`<div style="text-align:center;color:var(--muted);padding:40px;font-size:13px;">No accounts match your filters.</div>`:"";
+  list.forEach(org=>{
+    const c=org.composite,rc=REP_COLORS[org.rep]||"var(--muted)";
+    const intent=gistData.intent[org.id];
+    const exp=gistData.expansion[org.id];
+    const iStyle=intent?INTENT_STYLE[intent]:null;
+    const eStyle=exp?EXP_STYLE[exp]:null;
+    const div=document.createElement("div");
+    div.className="acct";
+    div.style.borderLeftColor=c.color;
+    div.onclick=()=>openModal(org);
+    const urgColor=org.daysLeft<=30?"var(--red)":org.daysLeft<=60?"var(--orange)":"var(--muted)";
+    div.innerHTML=`
+      <div class="acct-top">
+        <div style="flex:1;min-width:140px">
+          <div class="acct-name">${org.name}${intent?` <span style="font-size:12px">${iStyle.icon}</span>`:""}${exp?` <span style="font-size:12px">${eStyle.icon}</span>`:""}</div>
+          <div class="acct-meta">${org.state} · ${org.closeDate} · <span style="color:${urgColor}">${org.daysLeft>999?"—":`${org.daysLeft}d`}</span></div>
+        </div>
+        <div class="acct-arr" style="color:${org.arr>=2000?"var(--text)":"var(--subtle)"}">${fmtArr(org.arr)}</div>
+        <div class="badges">
+          ${org.rep!=="—"?`<span class="badge" style="color:${rc};background:${rc}15;border-color:${rc}35">${org.rep}</span>`:""}
+          <span class="score-badge" style="color:${c.color};background:${c.color}15;border-color:${c.color}35">${c.score}/${c.max} · ${c.tier}</span>
+          ${org.zeroActivity?`<span class="badge" style="color:#f87171;background:#f8717115;border-color:#f8717140">No Activity</span>`:""}
+          ${org.upsell?`<span class="badge" style="color:#4ade80;background:#4ade8015;border-color:#4ade8040">Upsell?</span>`:""}
+          ${org.eng?.hasAssist&&org.eng.assist>0?`<span class="badge" style="color:#818cf8;background:#818cf815;border-color:#818cf840">Assist</span>`:""}
+          ${org.daysLeft<=30&&org.stage!=="Contracted"?`<span class="badge" style="color:#f87171;background:#f8717115;border-color:#f8717140">⚡ ${org.daysLeft}d</span>`:""}
+          ${org.type==="New"?`<span class="badge" style="color:#60a5fa;background:#60a5fa15;border-color:#60a5fa40">NEW</span>`:""}
+          <button class="action-btn" onclick="cycleExpansion(${org.id},event)" style="${eStyle?`color:${eStyle.color};background:${eStyle.bg};border-color:${eStyle.border}`:""}">${eStyle?`${eStyle.icon} ${exp}`:"+ Expansion"}</button>
+          <button class="action-btn" onclick="cycleIntent(${org.id},event)" style="${iStyle?`color:${iStyle.color};background:${iStyle.bg};border-color:${iStyle.border}`:""}">${iStyle?`${iStyle.icon} ${intent}`:"+ Intent"}</button>
+        </div>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+
+// ---- Modal ----
+function openModal(org){
+  const c=org.composite,eng=org.eng;
+  const rc=REP_COLORS[org.rep]||"var(--muted)";
+  const products=eng?["Hudl"+(eng.hasAssist?" + Assist":"")+(eng.hasFocus?" + Focus":"")].filter(Boolean):[];
+  const pips=(val,color)=>`<div class="pips"><div class="pips-label">${val===c.arrScore?"ARR":val===c.urgencyScore?"Urgency":"Engage"}</div><div class="pips-dots">${[1,2,3,4,5].map(n=>`<div class="pip" style="background:${n<=val?color:"#2a2a2a"}"></div>`).join("")}</div><div class="pips-val" style="color:${color}">${val}/5</div></div>`;
+  document.getElementById("modal-inner").innerHTML=`
+    <div class="modal-header">
+      <div>
+        <div class="modal-name">${org.name}</div>
+        <div class="modal-sub">${org.state} · ${org.owner} · ${org.type}</div>
+        ${org.rep!=="—"?`<div style="margin-top:6px"><span class="badge" style="color:${rc};background:${rc}15;border-color:${rc}35">Rep: ${org.rep}</span></div>`:""}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <span class="badge" style="color:${c.color};background:${c.color}15;border-color:${c.color}35;font-size:11px;padding:4px 12px">${c.tier} Priority</span>
+        <button class="modal-close" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+    <div class="score-block" style="background:${c.color}12;border:1px solid ${c.color}30">
+      <div>
+        <div style="font-size:10px;font-weight:500;color:${c.color};text-transform:uppercase;letter-spacing:1px">Priority Score</div>
+        <div class="score-num" style="color:${c.color}">${c.score}<span class="score-max"> / ${c.max}</span></div>
+        ${!c.hasEng?`<div style="font-size:10px;color:var(--muted);margin-top:2px">No engagement data</div>`:""}
+      </div>
+      <div style="display:flex;gap:16px">
+        ${pips(c.arrScore,c.color)}
+        ${pips(c.urgencyScore,c.color)}
+        ${c.hasEng?pips(c.engScore,c.color):""}
+      </div>
+    </div>
+    ${eng?`
+    <div class="eng-block">
+      <div class="eng-label">Engagement ${products.length?`<span style="color:#3b82f6;margin-left:8px;text-transform:none;letter-spacing:0">${products[0]}</span>`:""}</div>
+      <div class="eng-grid">
+        ${[["Total Actions",eng.total],["Active Users",eng.users],["Video Views",eng.views],eng.hasAssist?["Assist Finalized",eng.assist]:null,eng.hasFocus?["Focus Uploads",eng.focus]:null].filter(Boolean).map(([k,v])=>`
+        <div class="eng-row"><span class="eng-key">${k}</span><span class="eng-val" style="color:${v===0?"#f87171":"var(--text)"}">${v??'—'}</span></div>`).join("")}
+      </div>
+      ${org.zeroActivity?`<div style="margin-top:10px;font-size:11px;color:#f87171;font-weight:500">⚠ Zero platform activity despite active subscription</div>`:""}
+      ${org.upsell?`<div style="margin-top:6px;font-size:11px;color:#4ade80;font-weight:500">↑ High usage on low-tier plan — upsell opportunity</div>`:""}
+    </div>`:""}
+    <div class="info-grid">
+      ${[["ARR",fmtArr(org.arr)],["Close Date",org.closeDate],["Days to Close",org.daysLeft>999?"—":`${org.daysLeft}d`],["Teams",org.teams||"—"],["Stage",org.stage],["Last Activity",org.actDays!=null?`${org.actDays}d ago`:"No record"]].map(([k,v])=>`
+      <div class="info-row"><span class="info-key">${k}</span><span class="info-val">${v}</span></div>`).join("")}
+    </div>
+    ${org.notes?`<div class="notes-block">📝 ${org.notes}</div>`:""}`;
+  document.getElementById("modal").classList.remove("hidden");
+}
+function closeModal(e){
+  if(!e||e.target===document.getElementById("modal")) document.getElementById("modal").classList.add("hidden");
+}
+
+// ---- State selects ----
+function buildStateSelect(){
+  const sel=document.getElementById("state-filter");
+  const states=["All",...Array.from(new Set(ORGS.map(o=>o.state))).sort()];
+  sel.innerHTML=states.map(s=>`<option value="${s}">${s==="All"?"All States":s}</option>`).join("");
+}
+
+// ---- Subtitle ----
+document.getElementById("subtitle").textContent=`${ORGS.length} accounts · Score = ARR + Urgency + Engagement (1–5 each, max 15)`;
+
+// ---- Init ----
+buildStateSelect();
+buildChips();
+buildMap();
+loadGist();
+</script>
+</body>
+</html>
